@@ -16,17 +16,17 @@ import java.util.Map;
 
 @Configuration
 public class KafkaProducerConfig {
- 
+
+
     @Bean
     public NewTopic createEmailTopic(){
-        return new NewTopic("EmailVerification-topic", 3, (short) 1);
+        return new NewTopic("EmailVerification-topic", 1, (short) 1);
     }
 
     @Bean
     public NewTopic createBucketTopic(){
-        return new NewTopic("BucketCreate-topic", 3, (short) 1);
+        return new NewTopic("BucketCreate-topic", 1, (short) 1);
     }
-
 
     @Bean
     public Map<String,Object> producerConfig(){

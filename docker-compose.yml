@@ -18,6 +18,7 @@ services:
 
   user-service:
     build: .
+    image: sijin02/user-service
     container_name: user-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-user:3306/User
