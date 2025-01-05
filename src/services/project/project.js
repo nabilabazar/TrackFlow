@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import './Project.css';
-import dotsImage from './dots.png';
 import { Bar } from 'react-chartjs-2';
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -29,8 +28,7 @@ const Project = () => {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('');
     const [showAssigneesForm, setShowAssigneesForm] = useState(false);
-    const [showUpdateForm, setShowUpdateForm] = useState(false);
-    const [showTaskForm, setShowTaskForm] = useState(false);
+    const [showUpdateForm, setShowUpdateForm] = useState(false);    const [showTaskForm, setShowTaskForm] = useState(false);
     const [showRoleForm, setShowRoleForm] = useState(false);
     const [showMemberInput, setShowMemberInput] = useState(false);
     const [tasks, setTasks] = useState([]);
@@ -48,10 +46,8 @@ const Project = () => {
         assignedUsers: [],
     });
 
-    const [updatedProject, setUpdatedProject] = useState({
-        name: '',
-        description: ''
-    });
+    const [updatedProject, setUpdatedProject] = useState({ ...project });
+
     const [members, setMembers] = useState([]);
     const [roles, setRoles] = useState([]);
     const [roleName, setRoleName] = useState('');
@@ -141,14 +137,14 @@ const Project = () => {
                 setLoading(true);
                 const idTokenClaims = await getIdTokenClaims();
                 const idToken = idTokenClaims.__raw;
-                const response = await axios.put(`http://localhost:8091/api/projects/${id}`,
-                updatedProject,
+
+                const response = await axios.put(
+                    `http://localhost:8091/api/projects/${projectId}`,
+                    updatedProject,
                     {
-                        headers: {
-                            Authorization: `Bearer ${idToken}`,
-                        },
+                        headers: { Authorization: `Bearer ${idToken}` },
                     }
-            );
+                );
 
                 if (response.status === 200) {
                     setProject(response.data);
@@ -171,10 +167,8 @@ const Project = () => {
                     const idTokenClaims = await getIdTokenClaims();
                     const idToken = idTokenClaims.__raw;
 
-                    await axios.delete(`http://localhost:8091/api/projects/${id}`, {
-                        headers: {
-                            Authorization: `Bearer ${idToken}`,
-                        },
+                    await axios.delete(`http://localhost:8091/api/projects/${projectId}`, {
+                        headers: { Authorization: `Bearer ${idToken}` },
                     });
 
                     alert('Project deleted successfully!');
@@ -188,32 +182,13 @@ const Project = () => {
         }
     };
 
-
-
-    const handleAddMember = async () => {
-        if (!email) {
-            alert('Please provide a valid email');
-            return;
-        }
-
-        try {
-            const response = await axios.post('http://localhost:8091/api/projectmembers/add', null, {
-                params: {
-                    projectName: selectedProject.name,
-                    email: email,
-                },
-            });
-
-            if (response.status === 200) {
-                alert(`Invitation sent to ${email}`);
-                setEmail('');
-                setShowMemberInput(false);
-            }
-        } catch (error) {
-            alert('Failed to send invitation. Please try again.');
-        }
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setUpdatedProject((prevState) => ({
+            ...prevState,
+            [name]: value,
+        }));
     };
-
 
     const handleCreateRole = async () => {
         if (!roleName || !selectedProject) {
@@ -242,15 +217,15 @@ const Project = () => {
     };
 
 
-const fetchRoles = async () => {
-    try {
-        const projectId = selectedProject.id;
-        const response = await axios.get('http://localhost:8091/api/roles/project/${projectId}');
-        setRoles(response.data);
-    } catch (error) {
-        console.error('Error fetching roles:', error);
-    }
-};
+    const fetchRoles = async () => {
+        try {
+            const projectId = selectedProject.id;
+            const response = await axios.get('http://localhost:8091/api/roles/project/${projectId}');
+            setRoles(response.data);
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+        }
+    };
 
     const handleCreateTask = async () => {
         const { taskName, taskDescription, taskPriority, taskStartDate, taskEndDate, taskEstimatedEndDate, status, assignedUsers } = taskDetails;
@@ -273,7 +248,7 @@ const fetchRoles = async () => {
                     taskDescription,
                     taskPriority,
                     taskStartDate: taskStartDate || null,
-                    taskEndDate: taskEndDate || null,     
+                    taskEndDate: taskEndDate || null,
                     taskEstimatedEndDate: taskEstimatedEndDate || null,
                     createdBy: idTokenClaims.email,
                     status: status || 'NOT_STARTED',
@@ -439,6 +414,57 @@ const fetchRoles = async () => {
                 return status;
         }
     };
+
+    const handleDeleteMember = async (email) => {
+        if (!selectedProject) {
+            alert('No project selected');
+            return;
+        }
+
+        if (window.confirm(`Are you sure you want to remove ${email} from the project?`)) {
+            try {
+                const idTokenClaims = await getIdTokenClaims();
+                const idToken = idTokenClaims.__raw;
+
+                await axios.delete(`http://localhost:8091/api/projectmembers/${selectedProject.id}/${email}`, {
+                    headers: { Authorization: `Bearer ${idToken}` },
+                });
+
+                setMembers(members.filter(member => member.email !== email));
+                alert('Member removed successfully');
+            } catch (error) {
+                console.error('Error removing member:', error);
+                alert('Failed to remove member. Please try again.');
+            }
+        }
+    };
+
+    const handleAddMember = async () => {
+        if (!email) {
+            alert('Please provide a valid email');
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:8091/api/projectmembers/add', null, {
+                params: {
+                    projectName: selectedProject.name,
+                    email: email,
+                },
+            });
+
+            if (response.status === 200) {
+                alert(`Invitation sent to ${email}`);
+                setEmail('');
+                setShowMemberInput(false);
+            }
+        } catch (error) {
+            alert('Failed to send invitation. Please try again.');
+        }
+    };
+
+
+
     useEffect(() => {
         const fetchKpiData = async () => {
             try {
@@ -552,6 +578,62 @@ const fetchRoles = async () => {
                         </div>
                     </div>
 
+                    <div className="members-info-containerNB">
+                        <h1>Projects Assignees</h1>
+                        <div className="members-sectionNB">
+                            <h4>Joined Members : </h4>
+                            <div className="members-grid">
+                                {members.map(member => (
+                                    <div key={member.email} className="member-card">
+                                        <div className="member-info">
+                                            <span>{member.email}</span>
+                                            <span className="role">{member.role}</span>
+                                        </div>
+                                        <button onClick={() => handleDeleteMember(member.email)}>
+                                            Remove
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+
+                        {/* Buttons Section */}
+                        <div className="button-rowNB">
+                            <button onClick={() => {
+                                console.log("Button clicked!");
+                                setShowMemberInput(true);
+                            }}>
+                                Invite Members
+                            </button>
+
+                        </div>
+
+
+                    </div>
+
+                    {showMemberInput && (
+                        <div id="invite-member-modal" className="modalNB">
+                            <div className="modal-contentNB">
+                                <h3>Invite Member</h3>
+                                <div className="project-formNB">
+                                    <label>Email Address:</label>
+                                    <input
+                                        type="email"
+                                        placeholder="Enter email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                    {errorMessage && <div className="error-messageNB">{errorMessage}</div>}
+                                    <div className="button-containerNB">
+                                        <button onClick={handleAddMember} className="create-btnNB">Send Invitation</button>
+                                        <button className="close-btnNB" onClick={() => setShowMemberInput(false)}>Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Task Modal */}
                     {showTaskForm && (
                         <div className="modalNB">
@@ -645,6 +727,45 @@ const fetchRoles = async () => {
                             </div>
                         </div>
                     )}
+
+                    {showUpdateForm && (
+                        <div id="modify-project-modal" className="modalNB">
+                            <div className="modal-contentNB">
+                                <h3>Modify Project Info</h3>
+                                <div className="project-formNB">
+                                    <label>Project Name:</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter Project Name"
+                                        value={updatedProject.name || ""}
+                                        onChange={(e) =>
+                                            setUpdatedProject((prevState) => ({...prevState, name: e.target.value}))
+                                        }
+                                    />
+                                    <label>Description:</label>
+                                    <textarea
+                                        placeholder="Enter Project Description"
+                                        value={updatedProject.description || ""}
+                                        onChange={(e) =>
+                                            setUpdatedProject((prevState) => ({
+                                                ...prevState,
+                                                description: e.target.value
+                                            }))
+                                        }
+                                    />
+                                    <button onClick={handleUpdateProject} disabled={loading}>
+                                        {loading ? 'Updating...' : 'Update Project'}
+                                    </button>
+                                    <button onClick={handleDeleteProject} disabled={loading}>
+                                        {loading ? 'Deleting...' : 'Delete Project'}
+                                    </button>
+                                    <button className="close-btnNB" onClick={() => setShowUpdateForm(false)}>Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
 
                     {/* Update Task Modal */}
                     {showUpdateTaskForm && (
@@ -809,25 +930,29 @@ const fetchRoles = async () => {
                             {tasks.length > 0 ? (
                                 tasks.map((task) => (
                                     <div className="task-item-wrapperNB" key={task.id}>
-                                    <div
-                                        className="task-itemNB"
-                                        onClick={() => handleSelectTaskForUpdate(task)} // Handle task click
+                                        <div
+                                            className="task-itemNB"
+                                            onClick={() => handleSelectTaskForUpdate(task)} // Handle task click
                                         >
 
-                                        <div className="task-infoNB">
-                                            <p><strong>Name:</strong> {task.taskName}</p>
-                                            <p><strong>Description:</strong> {task.taskDescription}</p>
-                                            <p><strong>Start Date:</strong> {task.taskStartDate ? new Date(task.taskStartDate).toLocaleDateString() : 'Not Set'}</p>
-                                        <p><strong>Due Date:</strong> {task.taskEndDate ? new Date(task.taskEndDate).toLocaleDateString() : 'Not Set'}
-                                        </p>
-                                        <p><strong>Estimated Date
-                                            Time:</strong> {task.taskEstimatedEndDate ? new Date(task.taskEstimatedEndDate).toLocaleDateString() : 'Not Set'}</p>
-                                            <p><strong>Priority:</strong> {task.taskPriority}</p>
-                                            <p><strong>Status:</strong> {formatStatus(task.status)}</p>
+                                            <div className="task-infoNB">
+                                                <p><strong>Name:</strong> {task.taskName}</p>
+                                                <p><strong>Description:</strong> {task.taskDescription}</p>
+                                                <p><strong>Start
+                                                    Date:</strong> {task.taskStartDate ? new Date(task.taskStartDate).toLocaleDateString() : 'Not Set'}
+                                                </p>
+                                                <p><strong>Due
+                                                    Date:</strong> {task.taskEndDate ? new Date(task.taskEndDate).toLocaleDateString() : 'Not Set'}
+                                                </p>
+                                                <p><strong>Estimated Date
+                                                    Time:</strong> {task.taskEstimatedEndDate ? new Date(task.taskEstimatedEndDate).toLocaleDateString() : 'Not Set'}
+                                                </p>
+                                                <p><strong>Priority:</strong> {task.taskPriority}</p>
+                                                <p><strong>Status:</strong> {formatStatus(task.status)}</p>
+
+                                            </div>
 
                                         </div>
-
-                                    </div>
                                     </div>
                                 ))
                             ) : (
