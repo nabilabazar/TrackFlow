@@ -30,7 +30,7 @@ const Project = () => {
     const [showUpdateForm, setShowUpdateForm] = useState(false);    const [showTaskForm, setShowTaskForm] = useState(false);
     const [showMemberInput, setShowMemberInput] = useState(false);
     const [tasks, setTasks] = useState([]);
-    const [isKpiVisible, setIsKpiVisible] = useState(false); // State for KPI dropdown visibility
+    const [isKpiVisible, setIsKpiVisible] = useState(false);
     const [showUpdateTaskForm, setShowUpdateTaskForm] = useState(false);
     const [commentText, setCommentText] = useState({});
 
@@ -56,14 +56,12 @@ const Project = () => {
             const response = await axios.get(`http://localhost:8091/api/projects/${projectId}`, {
                 headers: {Authorization: `Bearer ${idToken}`},
             });
-            console.log("Project data:", response.data);
             const membersResponse = await axios.get(`http://localhost:8091/api/projects/${projectId}/members`, {
                 headers: {Authorization: `Bearer ${idToken}`},
             });
-            console.log("Members data:", membersResponse.data);
             const project = {
-                ...response.data,           // Project details
-                members: membersResponse.data,  // Project members
+                ...response.data,           
+                members: membersResponse.data,
             };
             setProject(response.data);
             setSelectedProject(response.data);
@@ -72,7 +70,6 @@ const Project = () => {
                 description: response.data.description,
             });
             setMembers(membersResponse.data);
-            console.log('project')
             return project;
 
         } catch (error) {
@@ -81,16 +78,12 @@ const Project = () => {
         }
     };
 
-
     const fetchTasks = async (projectId, idToken) => {
-        console.log("projectId, idToken", projectId, idToken);
         try {
-            console.log("projectId, idToken", projectId, idToken);
             const tasksResponse = await axios.get(`http://localhost:8095/api/tasks/project/${projectId}`, {
                 headers: {Authorization: `Bearer ${idToken}`},
             });
             setTasks(tasksResponse.data);
-            console.log("task responses:", tasksResponse.data);
         } catch (error) {
             setErrorMessage('An error occurred while fetching tasks.');
         }
@@ -100,18 +93,17 @@ const Project = () => {
         try {
 
             setLoading(true);
-            console.log("Ffff")
             const projectData = await fetchProject(idToken);
             if (projectData) {
                 await fetchTasks(projectData.id, idToken);
             }
-            console.log('Fetching tasks for project with ID:', projectData.id);
         } catch (error) {
             setErrorMessage('An error occurred while fetching data.');
         } finally {
             setLoading(false);
         }
     };
+    
     useEffect(() => {
         if (isAuthenticated) {
             const fetchDataWrapper = async () => {
@@ -133,15 +125,11 @@ const Project = () => {
                 setLoading(true);
                 const idTokenClaims = await getIdTokenClaims();
                 const idToken = idTokenClaims.__raw;
-
                 const response = await axios.put(
                     `http://localhost:8091/api/projects/${projectId}`,
                     updatedProject,
-                    {
-                        headers: { Authorization: `Bearer ${idToken}` },
-                    }
+                    { headers: { Authorization: `Bearer ${idToken}` }, }
                 );
-
                 if (response.status === 200) {
                     setProject(response.data);
                     setShowUpdateForm(false);
@@ -165,12 +153,11 @@ const Project = () => {
                 { headers: { Authorization: `Bearer ${idToken}` } }
             );
 
-            setTasks(response.data); // Store tasks in state
+            setTasks(response.data);
         } catch (error) {
             console.error("Error fetching tasks:", error);
         }
     };
-
 
     const handleDeleteProject = async () => {
         if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
@@ -179,11 +166,9 @@ const Project = () => {
                     setLoading(true);
                     const idTokenClaims = await getIdTokenClaims();
                     const idToken = idTokenClaims.__raw;
-
                     await axios.delete(`http://localhost:8091/api/projects/${projectId}`, {
                         headers: { Authorization: `Bearer ${idToken}` },
                     });
-
                     alert('Project deleted successfully!');
                     navigate('/projects'); // Navigate back to projects list
                 } catch (error) {
@@ -194,7 +179,6 @@ const Project = () => {
             }
         }
     };
-
 
     const handleCreateTask = async () => {
         const { taskName, taskDescription, taskPriority, taskStartDate, taskEndDate, taskEstimatedEndDate, status, assignedUsers } = taskDetails;
@@ -207,10 +191,8 @@ const Project = () => {
         if (isAuthenticated && selectedProject) {
             try {
                 setLoading(true);
-
                 const idTokenClaims = await getIdTokenClaims();
                 const idToken = idTokenClaims.__raw;
-
                 const taskData = {
                     projectId: selectedProject.id,
                     taskName,
@@ -223,7 +205,6 @@ const Project = () => {
                     status: status || 'NOT_STARTED',
                     assignedUsers: assignedUsers || [],
                 };
-
                 // Send request to create task
                 const response = await axios.post(`http://localhost:8095/api/tasks`, taskData, {
                     headers: {
@@ -233,14 +214,10 @@ const Project = () => {
 
                 if (response.status === 200 || response.status === 201) {
                     alert('Task added successfully!');
-
-                    // Immediately add the new task to the task list in state
                     setTasks((prevTasks) => [
                         ...prevTasks,
-                        response.data,  // Assuming response.data contains the newly created task
+                        response.data, 
                     ]);
-
-                    // Reset the form
                     setTaskDetails({
                         taskName: '',
                         taskDescription: '',
@@ -251,7 +228,6 @@ const Project = () => {
                         status: 'NOT_STARTED',
                         assignedUsers: [],
                     });
-
                     setShowTaskForm(false);
                 } else {
                     alert(`Failed to create task. Status code: ${response.status}`);
@@ -269,18 +245,11 @@ const Project = () => {
             console.error('Task ID is missing');
             return;
         }
-
-        console.log('Updating task with ID:', taskDetails.taskId);
-
         try {
             setLoading(true);
-
             const idTokenClaims = await getIdTokenClaims();
             const idToken = idTokenClaims.__raw;
-
-            // Prepare the payload
             const { id, ...updatedTaskDetails } = taskDetails;
-
             const response = await axios.put(
                 `http://localhost:8095/api/tasks/${taskDetails.taskId}`, // Use taskId here
                 updatedTaskDetails,
@@ -290,8 +259,6 @@ const Project = () => {
                     },
                 }
             );
-
-            console.log('Task updated successfully', response.data);
             setShowUpdateTaskForm(false);
         } catch (error) {
             console.error('Error updating task:', error);
@@ -299,23 +266,17 @@ const Project = () => {
             setLoading(false);
         }
     };
-
-
-
+    
     const handleSelectTaskForUpdate = (task) => {
-        console.log('Clicked Task:', task); // Log the full task to inspect
-
-        // Ensure taskId is available
+        console.log('Clicked Task:', task);
         if (task.taskId) {
-            console.log('Task ID:', task.taskId); // Log the task ID to confirm
+            console.log('Task ID:', task.taskId); 
         } else {
             console.error('Task ID is missing or undefined');
         }
-
-        // Set the task details for the selected task
         setTaskDetails({
-            id: task.taskId, // Using task.taskId for modal purposes
-            taskId: task.taskId, // Include taskId in the payload for the backend
+            id: task.taskId, 
+            taskId: task.taskId, 
             taskName: task.taskName,
             taskDescription: task.taskDescription,
             taskPriority: task.taskPriority,
@@ -324,9 +285,8 @@ const Project = () => {
             taskEstimatedEndDate: task.taskEstimatedEndDate,
             status: task.status,
             assignedUsers: task.assignedUsers,
-            projectId: task.projectId, // Include projectId
+            projectId: task.projectId,
         });
-
         setShowUpdateTaskForm(true);
     };
 
@@ -335,18 +295,14 @@ const Project = () => {
             console.error('Task ID is missing');
             return;
         }
-
         const confirmDelete = window.confirm(
             'Are you sure you want to delete this task? This action cannot be undone.'
         );
         if (!confirmDelete) return;
-
         try {
             setLoading(true);
-
             const idTokenClaims = await getIdTokenClaims();
             const idToken = idTokenClaims.__raw;
-
             const response = await axios.delete(
                 `http://localhost:8095/api/tasks/${taskDetails.taskId}`,
                 {
@@ -355,12 +311,7 @@ const Project = () => {
                     },
                 }
             );
-
-            console.log('Task deleted successfully', response.data);
-
-            // Optionally refresh the task list or remove the task from the state
             setTasks((prevTasks) => prevTasks.filter((task) => task.taskId !== taskDetails.taskId));
-
             setShowUpdateTaskForm(false); // Close the modal after successful deletion
         } catch (error) {
             console.error('Error deleting task:', error);
@@ -368,7 +319,6 @@ const Project = () => {
             setLoading(false);
         }
     };
-
 
     const formatStatus = (status) => {
         switch (status) {
@@ -383,88 +333,18 @@ const Project = () => {
         }
     };
 
-    const handlePostComment = async (taskId) => {
-        if (isAuthenticated) {
-            try {
-                setLoading(true);
-                const idTokenClaims = await getIdTokenClaims();
-                const idToken = idTokenClaims.__raw;
-
-                const response = await axios.post(
-                    `http://localhost:8095/api/tasks/${taskId}/comments`,
-                    { commentText: commentText[taskId], userName: "LoggedUserName" }, // Replace 'LoggedUserName' appropriately
-                    { headers: { Authorization: `Bearer ${idToken}` } }
-                );
-
-                if (response.status === 200) {
-                    const updatedComment = response.data;
-                    setTasks((prevTasks) =>
-                        prevTasks.map((task) =>
-                            task.id === taskId
-                                ? { ...task, comments: [...task.comments, updatedComment] }
-                                : task
-                        )
-                    );
-                    setLoading(false);
-                    alert('Comment posted successfully');
-                    setCommentText((prev) => ({ ...prev, [taskId]: '' }));
-                }
-            } catch (error) {
-                setLoading(false);
-                console.error('Error posting comment:', error);
-                alert('Failed to post comment');
-            }
-        }
-    };
-
-    const handleResolveComment = async (taskId, commentId) => {
-        if (isAuthenticated) {
-            try {
-                setLoading(true);
-                const idTokenClaims = await getIdTokenClaims();
-                const idToken = idTokenClaims.__raw;
-
-                await axios.put(
-                    `http://localhost:8095/api/tasks/${taskId}/comments/${commentId}/resolve`,
-                    { userName: 'LoggedUserName' }, // Replace 'LoggedUserName' with the actual logged-in username if available
-                    { headers: { Authorization: `Bearer ${idToken}` } }
-                );
-
-                setTasks((prevTasks) =>
-                    prevTasks.map((task) =>
-                        task.id === taskId
-                            ? {
-                                ...task,
-                                comments: task.comments.filter((comment) => comment.id !== commentId),
-                            }
-                            : task
-                    )
-                );
-                setLoading(false);
-                alert('Comment resolved successfully');
-            } catch (error) {
-                setLoading(false);
-                console.error('Error resolving comment:', error);
-                alert('Failed to resolve comment');
-            }
-        }
-    };
-
     const handleDeleteMember = async (email) => {
         if (!selectedProject) {
             alert('No project selected');
             return;
         }
-
         if (window.confirm(`Are you sure you want to remove ${email} from the project?`)) {
             try {
                 const idTokenClaims = await getIdTokenClaims();
                 const idToken = idTokenClaims.__raw;
-
                 await axios.delete(`http://localhost:8091/api/projectmembers/${selectedProject.id}/${email}`, {
                     headers: { Authorization: `Bearer ${idToken}` },
                 });
-
                 setMembers(members.filter(member => member.email !== email));
                 alert('Member removed successfully');
             } catch (error) {
@@ -479,7 +359,6 @@ const Project = () => {
             alert('Please provide a valid email');
             return;
         }
-
         try {
             const response = await axios.post('http://localhost:8091/api/projectmembers/add', null, {
                 params: {
@@ -487,7 +366,6 @@ const Project = () => {
                     email: email,
                 },
             });
-
             if (response.status === 200) {
                 alert(`Invitation sent to ${email}`);
                 setEmail('');
@@ -503,7 +381,6 @@ const Project = () => {
         try {
             const idTokenClaims = await getIdTokenClaims();
             const idToken = idTokenClaims.__raw;
-
             const response = await axios.post(
                 `http://localhost:8095/api/tasks/${taskId}/assign`,
                 null,
@@ -515,18 +392,18 @@ const Project = () => {
 
             if (response.status === 200) {
                 alert(`User ${email} assigned successfully.`);
-                fetchTasksByProject(projectId); // Refresh tasks for the project
+                fetchTasksByProject(projectId);
             }
         } catch (error) {
             console.error("Error assigning user:", error);
             alert("Failed to assign user. Please try again.");
         }
     };
+    
     const handleRemoveUserFromTask = async (taskId, email) => {
         try {
             const idTokenClaims = await getIdTokenClaims();
             const idToken = idTokenClaims.__raw;
-
             const response = await axios.post(
                 `http://localhost:8095/api/tasks/${taskId}/remove`,
                 null,
@@ -551,16 +428,12 @@ const Project = () => {
             try {
                 const idTokenClaims = await getIdTokenClaims();
                 const idToken = idTokenClaims.__raw;
-
-                console.log('Fetching KPI data for project ID:', projectId);
                 const response = await axios.get(`http://localhost:8010/api/kpi/project/${projectId}`, {
                     headers: {
                         Authorization: `Bearer ${idToken}`,
                     },
                 });
-
                 const data = response.data;
-
                 if (data && Array.isArray(data.cycleTimes)) {
                     data.cycleTimes = data.cycleTimes.map(task => ({
                         taskId: task.taskId,
@@ -569,8 +442,6 @@ const Project = () => {
                 } else {
                     data.cycleTimes = [];
                 }
-
-                console.log('KPI data fetched:', response.data);
                 setKpiData(data);
                 setLoading(false);
             } catch (error) {
@@ -578,6 +449,7 @@ const Project = () => {
                 setLoading(false);
             }
         };
+        
         fetchKpiData();
         const createWebSocket = () => new SockJS('http://localhost:8095/ws');
         let stompClient = Stomp.over(createWebSocket);
@@ -585,9 +457,7 @@ const Project = () => {
             stompClient.connect(
                 {},
                 () => {
-                    console.log('Connected to WebSocket');
                     stompClient.subscribe('/topic/kpiUpdates', () => {
-                        console.log('TaskService update detected. Fetching updated KPI data...');
                         fetchKpiData(); // Trigger KPI fetch on task update
                     });
                 },
@@ -601,7 +471,6 @@ const Project = () => {
         return () => {
             if (stompClient) {
                 stompClient.disconnect(() => {
-                    console.log('Disconnected from WebSocket');
                 });
             }
         };
@@ -683,7 +552,6 @@ const Project = () => {
                         {/* Buttons Section */}
                         <div className="button-rowNB">
                             <button onClick={() => {
-                                console.log("Button clicked!");
                                 setShowMemberInput(true);
                             }}>
                                 Invite Members
@@ -710,7 +578,7 @@ const Project = () => {
                                     <div className="button-containerNB">
                                         <button onClick={handleAddMember} className="create-btnNB">Send Invitation</button>
 
-                                        <span className="closeNB" onClick={() => setShowMemberInput(false)}>&times;</span> {/* This represents the X symbol */}
+                                        <span className="closeNB" onClick={() => setShowMemberInput(false)}>&times;</span>
                                     </div>
                                 </div>
                             </div>
@@ -846,9 +714,8 @@ const Project = () => {
                                         {loading ? 'Deleting...' : 'Delete Project'}
                                     </button>
                                 </div>
-                                    {/* Close X button */}
                                     <span className="closeNB" onClick={() => setShowUpdateForm(false)}>
-                    &times; {/* This represents the X symbol */}
+                    &times;
                 </span>
                                 </div>
                             </div>
@@ -864,7 +731,7 @@ const Project = () => {
                                 <form
                                     onSubmit={(e) => {
                                         e.preventDefault();
-                                        handleUpdateTask(); // Call the function to update the task
+                                        handleUpdateTask();
                                     }}
                                 >
                                     <label>Task Name:</label>
@@ -909,7 +776,7 @@ const Project = () => {
                                     >
                                         <option value="NOT_STARTED">Not Started</option>
                                         <option value="IN_PROGRESS">In Progress</option>
-                                        <option value="COMPLETED">Completed</option>
+                                        <option value="DONE">Done</option>
                                     </select>
 
                                     <label>Start Date:</label>
@@ -941,36 +808,14 @@ const Project = () => {
                                         }
                                         required
                                     />
-                                    {/* Close X button */}
                                     <span className="closeNB" onClick={() => setShowUpdateTaskForm(false)}>
                     &times;
                 </span>
-
-                                        {/*/!* Add a new comment *!/*/}
-                                        {/*<textarea*/}
-                                        {/*    placeholder="Add a comment..."*/}
-                                        {/*    value={commentText[taskDetails.id] || ''}*/}
-                                        {/*    onChange={(e) =>*/}
-                                        {/*        setCommentText({ ...commentText, [taskDetails.id]: e.target.value })*/}
-                                        {/*    }*/}
-                                        {/*    className="comment-input"*/}
-                                        {/*></textarea>*/}
-                                        {/*<button*/}
-                                        {/*    className="post-comment-button"*/}
-                                        {/*    onClick={() => handlePostComment(taskDetails.id)}*/}
-                                        {/*    disabled={loading}*/}
-                                        {/*>*/}
-                                        {/*    →*/}
-                                        {/*</button>*/}
-
-                                    {/* Close X button */}
                                     <span className="closeNB" onClick={() => setShowUpdateTaskForm(false)}>
-                    &times; {/* This represents the X symbol */}
+                    &times;
                 </span>
                                     <div className="button-container">
                                         <button type="submit" disabled={loading}>Update</button>
-
-
                                         <button
                                             type="button"
                                             onClick={() => setShowAssignUserForm(true)}
@@ -980,8 +825,8 @@ const Project = () => {
                                         <button
                                             type="button"
                                             className="delete-btnNB"
-                                            onClick={handleDeleteTask} // Call the delete function
-                                            disabled={loading} // Optionally disable while loading
+                                            onClick={handleDeleteTask}
+                                            disabled={loading}
                                         >
                                             Delete
                                         </button>
@@ -990,6 +835,7 @@ const Project = () => {
                             </div>
                         </div>
                     )}
+
                     {showAssignUserForm && (
                         <div className="modalNB">
                             <div className="modal-contentNB">
@@ -1019,20 +865,12 @@ const Project = () => {
                                         );
                                     })}
                                 </div>
-                                {/* Close X button */}
                                 <span className="closeNB" onClick={() => setShowAssignUserForm(false)}>
-                &times; {/* This represents the X symbol */}
+                &times; 
             </span>
                             </div>
                         </div>
                     )}
-
-
-
-
-
-
-
 
                     {/* KPI Container */}
                     {kpiData ? (
@@ -1041,12 +879,12 @@ const Project = () => {
                                 className="kpi-header"
                                 style={{
                                     background: isKpiVisible
-                                        ? 'none' // No background gradient when shown
-                                        : 'linear-gradient(135deg, #39b18b, #185a9d)', // Gradient when hidden
-                                    color: isKpiVisible ? 'black' : 'white', // White text when hidden, black when shown
-                                    cursor: 'pointer', // Make the header clickable
-                                    padding: '10px', // Optional: Add some padding to the header
-                                    borderRadius: '8px' // Optional: Give the header some rounded corners
+                                        ? 'none'
+                                        : 'linear-gradient(135deg, #39b18b, #185a9d)', 
+                                    color: isKpiVisible ? 'black' : 'white', 
+                                    cursor: 'pointer',
+                                    padding: '10px',
+                                    borderRadius: '8px'
                                 }}
                                 onClick={toggleKpiVisibility}
                             >
@@ -1095,7 +933,7 @@ const Project = () => {
                                     <div className="task-item-wrapperNB" key={task.id}>
                                         <div
                                             className="task-itemNB"
-                                            onClick={() => handleSelectTaskForUpdate(task)} // Handle task click
+                                            onClick={() => handleSelectTaskForUpdate(task)}
                                         >
 
                                             <div className="task-infoNB">
@@ -1118,30 +956,7 @@ const Project = () => {
                                                 </p>
                                                 <p><strong>Priority:</strong> {task.taskPriority}</p>
                                                 <p><strong>Status:</strong> {formatStatus(task.status)}</p>
-
-                                                {/*<p><strong>Comments:</strong></p>*/}
-                                                {/*<div className="comments-list">*/}
-                                                {/*    {task.comments && task.comments.length > 0 ? (*/}
-                                                {/*        task.comments.map((comment) => (*/}
-                                                {/*            <div key={comment.commentId} className="comment-item">*/}
-                                                {/*                <p>{comment.toString()}</p>*/}
-                                                {/*                <button*/}
-                                                {/*                    className="resolve-comment-button"*/}
-                                                {/*                    onClick={() => handleResolveComment(task.id, comment.commentId)}*/}
-                                                {/*                    disabled={loading}*/}
-                                                {/*                >*/}
-                                                {/*                    ✕*/}
-                                                {/*                </button>*/}
-                                                {/*            </div>*/}
-                                                {/*        ))*/}
-                                                {/*    ) : (*/}
-                                                {/*        <p>No comments yet</p>*/}
-                                                {/*    )}*/}
-                                                {/*</div>*/}
-
                                             </div>
-
-
                                         </div>
                                     </div>
                                 ))
