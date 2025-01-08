@@ -82,10 +82,6 @@ const AddProject = () => {
         navigate(`/project/${project.id}`);
     };
 
-    const handleMenuClick = (projectId) => {
-        setVisibleMenu(visibleMenu === projectId ? null : projectId);
-    };
-
     return (
         <div className="containerNB">
             <div className="project-list-containerNB">
@@ -105,12 +101,6 @@ const AddProject = () => {
                             {/* Gradient Header with Project Name and Dots Menu */}
                             <div className="project-headerNB">
                                 <h4>{project.name}</h4>
-                                <img
-                                    src={dotsImage}
-                                    alt="Menu"
-                                    className="dots-menuNB"
-                                    onClick={() => handleMenuClick(project.id)} 
-                                />
                             </div>
 
                             <p className="project-descriptionNB">{project.description}</p>
