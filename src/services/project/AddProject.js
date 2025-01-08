@@ -82,9 +82,9 @@ const AddProject = () => {
         navigate(`/project/${project.id}`);
     };
 
-    const handleMenuClick = (projectId) => {
-        setVisibleMenu(visibleMenu === projectId ? null : projectId);
-    };
+    // const handleMenuClick = (projectId) => {
+    //     setVisibleMenu(visibleMenu === projectId ? null : projectId);
+    // };
 
     return (
         <div className="containerNB">
@@ -105,12 +105,12 @@ const AddProject = () => {
                             {/* Gradient Header with Project Name and Dots Menu */}
                             <div className="project-headerNB">
                                 <h4>{project.name}</h4>
-                                <img
-                                    src={dotsImage}
-                                    alt="Menu"
-                                    className="dots-menuNB"
-                                    onClick={() => handleMenuClick(project.id)} 
-                                />
+                                // <img
+                                //     src={dotsImage}
+                                //     alt="Menu"
+                                //     className="dots-menuNB"
+                                //     onClick={() => handleMenuClick(project.id)} 
+                                // />
                             </div>
 
                             <p className="project-descriptionNB">{project.description}</p>
@@ -118,15 +118,15 @@ const AddProject = () => {
                                 Created at: {new Date(project.createdAt).toLocaleDateString()}
                             </div>
 
-                            {/* Menu Dropdown (Initially hidden) */}
-                            {project.menuVisible && (
-                                <div className="menu-dropdownNB">
-                                    <ul>
-                                        <li>Edit Project</li>
-                                        <li>Delete Project</li>
-                                    </ul>
-                                </div>
-                            )}
+                            // {/* Menu Dropdown (Initially hidden) */}
+                            // {project.menuVisible && (
+                            //     <div className="menu-dropdownNB">
+                            //         <ul>
+                            //             <li>Edit Project</li>
+                            //             <li>Delete Project</li>
+                            //         </ul>
+                            //     </div>
+                            // )}
                         </div>
                     ))}
                 </div>
